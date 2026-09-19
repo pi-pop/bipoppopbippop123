@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>RYZMusical V2</title>
+<script src="https://unpkg.com/tone@14.8.39/build/Tone.js"></script>
+<script src="https://unpkg.com/@tonejs/midi"></script>
+<script src="https://unpkg.com/fflate@0.8.2/umd/index.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<style>
+  :root{--accent-rgb:220,30,30;--accent-strong-rgb:200,23,23;--accent-light-rgb:255,77,77;--accent-lightest-rgb:255,177,153;--glossy-bg:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, rgb(var(--accent-light-rgb)) 0%, rgb(var(--accent-rgb)) 55%, rgb(var(--accent-strong-rgb)) 100%);--glossy-bg-active:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, rgb(var(--accent-rgb)) 0%, rgb(var(--accent-strong-rgb)) 100%);--glossy-shadow:inset 0 2px 3px rgba(255,255,255,0.55), inset 0 -8px 14px rgba(0,0,0,0.28), 0 5px 12px rgba(var(--accent-strong-rgb),0.5);--glossy-shadow-active:inset 0 2px 3px rgba(255,255,255,0.35), inset 0 -5px 10px rgba(0,0,0,0.32), 0 3px 8px rgba(var(--accent-strong-rgb),0.7);--glossy-bg-dark:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, #2e2e2e 0%, #161616 55%, #060606 100%);--glossy-shadow-dark:inset 0 2px 3px rgba(255,255,255,0.18), inset 0 -6px 10px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.5);--glossy-bg-danger:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, #ff6b6b 0%, #d81c1c 55%, #a30f0f 100%);--glossy-bg-danger-active:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, #d81c1c 0%, #8c0f0f 100%);--glossy-shadow-danger:inset 0 2px 3px rgba(255,255,255,0.5), inset 0 -6px 10px rgba(0,0,0,0.3), 0 4px 10px rgba(160,10,10,0.5);--glossy-bg-gold:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, #ffe083 0%, #ffbe3d 55%, #b8790a 100%);--glossy-shadow-gold:inset 0 2px 3px rgba(255,255,255,0.6), inset 0 -6px 10px rgba(0,0,0,0.25), 0 4px 10px rgba(180,120,10,0.5)}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+  body{ background:#050505; color:#fff; min-height:100vh; padding:12px; transition: background 1s cubic-bezier(.4,0,.2,1); }
+
+  .frame{ position:relative; border:1.5px solid rgb(var(--accent-rgb)); border-radius:28px; padding:16px; box-shadow:0 0 8px rgba(var(--accent-strong-rgb),0.22); background:rgba(5,5,8,0.35); }
+
+  .header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .logo{font-family:'Segoe UI',Arial,sans-serif;display:flex;align-items:center;gap:8px}
+  .logo .a{font-weight:800;font-size:23px;letter-spacing:2.5px;color:#fff;text-shadow:0 0 10px rgba(var(--accent-rgb),.7),0 0 22px rgba(var(--accent-rgb),.35)}
+  .logo .b{font-weight:800;font-size:12px;letter-spacing:1.5px;color:#fff;background:linear-gradient(160deg,rgb(var(--accent-rgb)),#7a0d0d);padding:5px 10px;border-radius:8px;box-shadow:0 2px 8px rgba(var(--accent-strong-rgb),.5), inset 0 1px 0 rgba(255,255,255,.2)}
+
+  button{ font-family:inherit; cursor:pointer; transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s cubic-bezier(.4,0,.2,1), background .35s cubic-bezier(.4,0,.2,1), border-color .35s cubic-bezier(.4,0,.2,1), color .35s ease; }
+  button:active{ transform:scale(0.93); transition: transform .12s cubic-bezier(.4,0,.2,1), box-shadow .12s ease, background .12s ease; }
+
+  .menu-wrap{position:relative}
+  .menu-btn{padding:10px 18px;border-radius:999px;border:1.5px solid rgb(var(--accent-rgb));background:linear-gradient(160deg,#2b2b2b,#0d0d0d);color:#fff;font-weight:700;font-size:14px;box-shadow:0 0 5px rgba(var(--accent-strong-rgb),0.4)}
+  .menu-btn:active{background:rgb(var(--accent-strong-rgb));box-shadow:0 0 10px rgba(var(--accent-strong-rgb),0.7)}
+  .menu-dropdown{position:absolute;right:0;top:calc(100% + 8px);background:#151515;border:1.5px solid rgb(var(--accent-rgb));border-radius:14px;overflow:hidden;z-index:10;box-shadow:0 0 8px rgba(var(--accent-strong-rgb),0.3);min-width:140px;opacity:0;transform:translateY(-10px) scale(.95);pointer-events:none;transition:opacity .35s cubic-bezier(.4,0,.2,1),transform .35s cubic-bezier(.34,1.56,.64,1)}
+  .menu-dropdown.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+  .menu-dropdown button{display:block;width:100%;padding:12px 16px;background:#151515;border:none;color:#fff;text-align:left;font-weight:700;font-size:13px;transition:background .25s ease}
+  .menu-dropdown button:active{background:rgb(var(--accent-strong-rgb));transform:scale(0.97)}
+
+  .tab-content{display:none;opacity:0;transform:translateY(10px);transition:opacity .4s cubic-bezier(.4,0,.2,1),transform .4s cubic-bezier(.4,0,.2,1)}
+  .tab-content.active{display:block}
+  .tab-content.active.show{opacity:1;transform:translateY(0)}
+
+  .now-card{border:1.5px solid rgba(var(--accent-strong-rgb),0.55);border-radius:20px;padding:16px;margin-bottom:14px;background:rgba(10,10,14,0.4);box-shadow:0 0 6px rgba(var(--accent-strong-rgb),0.15)}
+  .note-visualizer{position:relative;display:flex;align-items:flex-end;gap:2px;height:46px;margin-bottom:12px;overflow:hidden;padding-bottom:5px;border-bottom:1.5px dashed rgba(255,255,255,0.18)}
+  .note-visualizer .nv-bar{position:relative;flex:1;min-width:1px;height:6%;border-radius:2px 2px 0 0;background:rgba(255,255,255,0.07);transition:height .32s cubic-bezier(.22,.68,0,1),background .4s ease-out,box-shadow .4s ease-out}
+  .note-visualizer .nv-bar.on{background:linear-gradient(180deg,rgb(var(--accent-lightest-rgb)),rgb(var(--accent-light-rgb)) 55%,rgb(var(--accent-strong-rgb)));box-shadow:0 0 8px rgba(var(--accent-light-rgb),0.9),0 0 16px rgba(var(--accent-rgb),0.55);transition:height .045s ease-out,background .1s ease-out,box-shadow .1s ease-out}
+  .note-visualizer .nv-bar .nv-peak{position:absolute;left:0;right:0;bottom:6%;height:2px;border-radius:1px;background:#ffe9df;opacity:0;transition:bottom .55s cubic-bezier(.22,.68,0,1),opacity .55s ease-out}
+  .note-visualizer .nv-bar .nv-peak.on{opacity:.9;box-shadow:0 0 6px rgba(255,222,210,0.9);transition:bottom .045s ease-out,opacity .045s ease-out}
+  .song-title{font-size:20px;font-weight:800;color:#fff3e6;text-shadow:0 0 8px rgba(var(--accent-light-rgb),0.75),0 0 18px rgba(var(--accent-rgb),0.4);margin-bottom:14px;overflow:hidden;white-space:nowrap;position:relative}
+  #nowTitleInner{display:inline-block;will-change:transform}
+  .seek-bar{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:4px;background:linear-gradient(90deg,rgb(var(--accent-strong-rgb)) var(--pct,0%),rgba(255,255,255,0.15) var(--pct,0%));margin-bottom:10px;cursor:pointer}
+  .seek-bar::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid rgb(var(--accent-strong-rgb));box-shadow:0 0 6px rgba(var(--accent-strong-rgb),0.7)}
+  .seek-bar::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid rgb(var(--accent-strong-rgb));box-shadow:0 0 6px rgba(var(--accent-strong-rgb),0.7)}
+  .seek-bar::-moz-range-track{height:5px;border-radius:4px;background:rgba(255,255,255,0.15)}
+  .time-row{display:flex;justify-content:space-between;font-size:14px;color:#fff;margin-bottom:14px}
+  .badge-row{display:flex;gap:10px}
+  .badge{flex:1;text-align:center;padding:10px 6px;border-radius:14px;border:1.5px solid rgba(var(--accent-strong-rgb),0.4);background:rgba(255,255,255,0.03);transition:border-color .4s ease,box-shadow .4s ease}
+  .badge-label{font-size:10px;color:#ffbe5c;font-weight:700;margin-bottom:4px;letter-spacing:.5px}
+  .badge-val{font-size:15px;font-weight:800;color:#fff;transition:color .4s ease,text-shadow .4s ease}
+  .status-badge{border-color:rgba(var(--accent-strong-rgb),0.4)}
+  .status-badge.status-playing{border-color:#22ff8c;box-shadow:0 0 8px rgba(34,255,140,0.5)}
+  .status-badge.status-playing .badge-val{color:#22ff8c;text-shadow:0 0 8px rgba(34,255,140,.7)}
+
+  .mini-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .mini-btn{display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;border:1.5px solid rgb(220,30,30);background:linear-gradient(160deg,#2b2b2b,#0d0d0d);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .3s cubic-bezier(.4,0,.2,1),box-shadow .3s ease}
+  .mini-btn:active{transform:scale(0.93);background:#c81717}
+  .volume-wrap{flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1.5px solid rgb(var(--accent-rgb));background:linear-gradient(160deg,#2b2b2b,#0d0d0d)}
+  .volume-wrap .vol-label{font-size:11px;font-weight:700;color:#ccc}
+  input[type=file]{display:none}
+  input[type=range]{width:100%;accent-color:rgb(var(--accent-strong-rgb))}
+
+  .cari-row{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:12px}
+  .cari-btn{flex-shrink:0;padding:10px 22px;border-radius:999px;border:1.5px solid rgb(220,30,30);background:linear-gradient(160deg,#2b2b2b,#0d0d0d);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);font-weight:700;font-size:14px;box-shadow:0 0 5px rgba(210,20,20,0.4);transition:background .3s ease, box-shadow .3s ease}
+  .cari-btn:active{background:#c81717;box-shadow:0 0 10px rgba(210,20,20,0.7)}
+  .star-btn{background:linear-gradient(160deg,#2b2b2b,#0d0d0d);border:1.5px solid rgb(220,30,30);color:#fff;padding:6px;border-radius:8px;display:flex;align-items:center;margin-right:6px;transition:transform .3s cubic-bezier(.34,1.56,.64,1),color .3s ease,background .3s ease,box-shadow .3s ease}
+  .star-btn:active{transform:scale(0.85);background:#c81717}
+  .star-btn.active{background:var(--glossy-bg-gold);box-shadow:var(--glossy-shadow-gold);color:#fff}
+  .star-btn svg{width:14px;height:14px}
+  .cari-btn.active{background:#c81717;box-shadow:0 0 10px rgba(210,20,20,0.6)}
+  .search-container{max-width:0;flex-shrink:1;opacity:0;overflow:hidden;transition:max-width .5s cubic-bezier(.4,0,.2,1), opacity .35s ease .05s}
+  .search-container.open{max-width:600px;flex-grow:1;opacity:1}
+  .search-input{width:100%;padding:10px 14px;border-radius:999px;border:1.5px solid rgb(var(--accent-rgb));background:linear-gradient(160deg,#2b2b2b,#0d0d0d);color:#fff;font-size:14px;white-space:nowrap;outline:none;-webkit-tap-highlight-color:transparent}
+  .search-input:focus{outline:none;border-color:rgb(var(--accent-light-rgb));box-shadow:0 0 10px rgba(var(--accent-strong-rgb),0.6)}
+  .search-input::placeholder{color:rgba(255,255,255,0.4)}
+
+  .list-card{border:1.5px solid rgba(var(--accent-strong-rgb),0.55);border-radius:20px;padding:12px;min-height:180px;max-height:300px;overflow-y:auto;background:rgba(10,10,14,0.35);box-shadow:0 0 6px rgba(var(--accent-strong-rgb),0.12);margin-bottom:14px}
+  .item{padding:12px 14px;border-radius:14px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);font-size:14px;display:flex;justify-content:space-between;align-items:center;transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .35s cubic-bezier(.4,0,.2,1),border-color .35s ease}
+  .item.active{background:rgb(var(--accent-strong-rgb));border:1.5px solid rgb(var(--accent-rgb))}
+  .item span{display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;color:#fff3e6}
+  .item span:active{transform:scale(0.98)}
+  .del-btn{background:var(--glossy-bg-danger);border:1px solid rgba(255,255,255,0.35);box-shadow:var(--glossy-shadow-danger);color:#fff;padding:6px;border-radius:8px;display:flex;align-items:center}
+  .del-btn:active{background:var(--glossy-bg-danger-active);transform:scale(0.85)}
+  .del-btn:active svg{animation:trashShake .45s cubic-bezier(.36,.07,.19,.97)}
+  @keyframes trashShake{
+    0%,100%{transform:rotate(0deg) scale(1)}
+    20%{transform:rotate(-14deg) scale(1.05)}
+    40%{transform:rotate(11deg) scale(1.05)}
+    60%{transform:rotate(-7deg) scale(1)}
+    80%{transform:rotate(4deg) scale(1)}
+  }
+  .item{will-change:transform,opacity,max-height}
+
+  .action-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+  .action-btn{border-radius:14px;border:1.5px solid rgb(220,30,30);background:linear-gradient(160deg,#2b2b2b,#0d0d0d);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);font-weight:700;font-size:13px;padding:12px 6px}
+  .action-btn:active{background:#c81717;box-shadow:0 0 10px rgba(210,20,20,0.6)}
+  .action-btn.active-toggle{background:#c81717;box-shadow:0 0 10px rgba(210,20,20,0.7);border-color:#ff4d4d}
+  .ganti-bg-row{margin-bottom:14px}
+  .ganti-bg-row .action-btn{width:100%}
+
+  .transport-grid{display:grid;grid-template-columns:1fr 1.5fr 1fr;grid-template-rows:1fr 1fr;grid-template-areas:"tup mid narrow-up" "tdn mid narrow-down";gap:10px;margin-bottom:14px}
+  .grid-btn{grid-area:auto;border-radius:16px;border:1.5px solid rgb(220,30,30);background:linear-gradient(160deg,#2b2b2b,#0d0d0d);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;padding:16px 8px}
+  .grid-btn:active{background:#c81717;box-shadow:0 0 10px rgba(210,20,20,0.6)}
+  #tempoUp{grid-area:tup}
+  #tempoDown{grid-area:tdn}
+  .nav-arrow-btn{border-radius:16px;border:1.5px solid rgb(220,30,30);background:linear-gradient(160deg,#2b2b2b,#0d0d0d);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center}
+  .nav-arrow-btn:active{background:#c81717;box-shadow:0 0 12px rgba(210,20,20,0.7)}
+  #prevBtn{grid-area:narrow-up}
+  #nextBtn{grid-area:narrow-down}
+  #playPauseBtn{grid-area:mid;border-radius:26px;border:1px solid rgba(255,255,255,0.35);background:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, rgb(var(--accent-light-rgb)) 0%, rgb(var(--accent-rgb)) 55%, rgb(var(--accent-strong-rgb)) 100%);box-shadow:inset 0 2px 3px rgba(255,255,255,0.55), inset 0 -8px 14px rgba(0,0,0,0.28), 0 6px 14px rgba(var(--accent-strong-rgb),0.55);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;padding:8px}
+  #playPauseBtn:active{background:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, rgb(var(--accent-rgb)) 0%, rgb(var(--accent-strong-rgb)) 100%);box-shadow:inset 0 2px 3px rgba(255,255,255,0.35), inset 0 -5px 10px rgba(0,0,0,0.32), 0 3px 8px rgba(var(--accent-strong-rgb),0.7)}
+  #playPauseBtn .psp-label{font-weight:800;font-size:15px;line-height:1.3;text-align:center}
+  .mini-btn svg{width:16px;height:16px}
+  .volume-wrap svg{width:16px;height:16px;flex-shrink:0;color:#ccc}
+  .item span svg{width:16px;height:16px;flex-shrink:0}
+  .del-btn svg{width:14px;height:14px}
+
+  .color-grid{display:grid;grid-template-columns:repeat(6, 1fr);gap:10px}
+  .color-btn{height:50px;border-radius:12px;border:2px solid rgba(var(--accent-strong-rgb),0.3);cursor:pointer;transition:transform .3s cubic-bezier(.34,1.56,.64,1),border-color .3s ease,box-shadow .3s ease}
+  .color-btn:active{transform:scale(0.9)}
+  .color-btn.active{border:3px solid rgb(var(--accent-strong-rgb));box-shadow:0 0 8px rgba(var(--accent-strong-rgb),0.6)}
+  .custom-color-row{display:flex;align-items:center;gap:12px;margin-top:14px;padding:10px 14px;border-radius:14px;border:1.5px solid rgba(var(--accent-strong-rgb),0.4);background:rgba(255,255,255,0.03)}
+  .custom-color-row input[type=color]{width:44px;height:44px;padding:0;border:none;border-radius:10px;background:none;cursor:pointer;flex-shrink:0}
+  .custom-color-row input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+  .custom-color-row input[type=color]::-webkit-color-swatch{border:2px solid rgba(255,255,255,0.25);border-radius:10px}
+  .custom-color-row label{font-size:13px;font-weight:700;color:#ccc}
+
+  .doremi-grid{display:grid;grid-template-columns:repeat(6, 1fr);grid-auto-flow:column;grid-template-rows:repeat(10, 1fr);gap:6px}
+  .doremi-btn{padding:10px;border-radius:8px;background:#1c1c1c;border:1px solid rgb(220,30,30);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.35);font-size:11px;font-weight:700;text-align:center;transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .3s cubic-bezier(.4,0,.2,1)}
+  .doremi-btn.black{background:#0d0d0d}
+  .doremi-btn:active{background:#c81717;color:#fff;transform:scale(0.9)}
+  .note-range-title{font-weight:800;font-size:13px;letter-spacing:.4px;color:#ffbe5c;margin-bottom:10px}
+  .note-range-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .note-range-row select{flex:1;min-width:0}
+  .note-range-dash{color:#999;font-weight:700}
+  .note-range-info{font-size:12px;color:#ccc;display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .note-range-info b{color:#fff3e6}
+  .rename-btn{background:none;border:none;color:rgba(255,255,255,0.55);padding:4px;flex-shrink:0}
+  .rename-btn:active{color:#ffbe5c}
+  .rename-btn svg{width:15px;height:15px}
+
+  #introOverlay{position:fixed;inset:0;width:100vw;height:100vh;background:#000;z-index:99999;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:1;transition:opacity 1s ease}
+  #introOverlay.introHide{opacity:0;pointer-events:none}
+  #introVideo{width:100vw;height:100vh;object-fit:contain;display:block;background:#000}
+  #introLogoScreen{position:absolute;inset:0;background:#000;display:none;align-items:center;justify-content:center}
+  #introLogoImg{width:62%;max-width:340px;opacity:0;transform:scale(0.82);transition:opacity 0.85s ease,transform 0.85s cubic-bezier(.22,.9,.3,1)}
+  #introLogoImg.introShow{opacity:1;transform:scale(1)}
+  #introLogoImg.introLeave{opacity:0;transform:scale(0.12)}
+  .frame{opacity:0;transform:scale(0.8);transition:opacity 0.9s ease,transform 0.9s cubic-bezier(.22,.9,.3,1)}
+  .frame.appIn{opacity:1;transform:scale(1)}
+
+  .label{font-size:12px;opacity:.7;margin-bottom:8px;color:#ccc}
+  .glass{border:1.5px solid rgba(var(--accent-strong-rgb),0.55);border-radius:20px;padding:14px;margin-bottom:14px;background:rgba(10,10,14,0.35);box-shadow:0 0 6px rgba(var(--accent-strong-rgb),0.12)}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;opacity:0;pointer-events:none;transition:opacity .35s cubic-bezier(.4,0,.2,1)}
+  .modal-overlay.open{opacity:1;pointer-events:auto}
+  .modal-box{width:100%;max-width:420px;max-height:85vh;overflow-y:auto;background:linear-gradient(160deg,#1a0000,#0a0a0a);border:1.5px solid rgb(var(--accent-rgb));border-radius:22px;padding:18px;box-shadow:0 0 24px rgba(var(--accent-strong-rgb),0.4);transform:translateY(24px) scale(.96);opacity:0;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .35s ease}
+  .modal-overlay.open .modal-box{transform:translateY(0) scale(1);opacity:1}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:16px;margin-bottom:16px;color:#fff}
+  .modal-close{background:linear-gradient(160deg,#2b2b2b,#0d0d0d);border:1.5px solid rgb(var(--accent-rgb));color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+  .modal-close:active{background:rgb(var(--accent-strong-rgb))}
+  .upload-zone{border:2px dashed rgb(var(--accent-rgb));border-radius:16px;padding:26px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;background:rgba(var(--accent-strong-rgb),0.06);transition:background .3s ease,border-color .3s ease}
+  .upload-zone:active{background:rgba(var(--accent-strong-rgb),0.18);transform:scale(0.98)}
+  .upload-zone svg{width:30px;height:30px;color:rgb(var(--accent-light-rgb))}
+  .upload-text{font-weight:700;font-size:14px;color:#fff}
+  .upload-hint{font-size:12px;color:#999}
+
+  .sample-status{font-size:12px;color:#ffbe5c;font-weight:700;margin-bottom:10px}
+  select.search-input{-webkit-appearance:none;appearance:none}
+  .item-check{width:18px;height:18px;accent-color:rgb(var(--accent-strong-rgb));margin-right:2px;flex-shrink:0}
+  .item.selected{border:1.5px solid #ffbe5c;box-shadow:0 0 8px rgba(255,190,92,0.45)}
+
+  .upload-spinner{width:38px;height:38px;margin:2px auto 14px;border-radius:50%;border:3.5px solid rgba(var(--accent-rgb),0.18);border-top-color:rgb(var(--accent-strong-rgb));animation:uploadspin .8s linear infinite}
+  .upload-spinner.done{animation:none;border-color:#22ff8c;border-top-color:#22ff8c}
+  @keyframes uploadspin{to{transform:rotate(360deg)}}
+  .upload-progress-current{font-size:12px;color:#ccc;margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+  .upload-progress-count{font-size:13px;font-weight:800;color:#ffbe5c;margin-bottom:8px;font-family:'Courier New',monospace;text-align:center}
+  .upload-progress-bar{height:6px;border-radius:4px;background:rgba(255,255,255,0.08);overflow:hidden}
+  .upload-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,rgb(var(--accent-strong-rgb)),rgb(var(--accent-light-rgb)));transition:width .12s ease}
+.logo-img{height:55px;max-width:180px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(var(--accent-rgb),.55)) drop-shadow(0 0 22px rgba(var(--accent-rgb),.25))}
+
+</style>
+</head>
+<body>
+
+<div id="introOverlay">
+  <video id="introVideo" src="https://raw.githubusercontent.com/pi-pop/ryz/main/ryzz-gank.mp4" autoplay playsinline muted></video>
+  <div id="introLogoScreen">
+    <img id="introLogoImg" src="https://raw.githubusercontent.com/pi-pop/p/main/ryz.png" alt="RYZZ GANK">
+  </div>
+</div>
+
+<div class="frame">
+  <div class="header-row">
+    <div>
+      <img src="https://raw.githubusercontent.com/pi-pop/p/main/ryz.png" alt="RYZ" class="logo-img">
+    </div>
+    <div class="menu-wrap">
+      <button class="menu-btn" id="menuBtn">MENU ▾</button>
+      <div class="menu-dropdown" id="menuDropdown">
+        <button data-tab="main">MAIN</button>
+        <button data-tab="doremi">DOREMI</button>
+        <button data-tab="tampilan">TAMPILAN</button>
+        <button data-tab="suara">SUARA</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content active show" id="tab-main">
+    <div class="now-card">
+      <div class="note-visualizer" id="noteVisualizer"></div>
+      <div class="song-title" id="nowTitle"><span id="nowTitleInner">Tidak Ada Lagu</span></div>
+      <input type="range" id="seekBar" class="seek-bar" min="0" max="1000" value="0">
+      <div class="time-row"><span id="time">00:00</span><span id="duration">00:00</span></div>
+      <div class="badge-row">
+        <div class="badge status-badge" id="statusBadge"><div class="badge-label">STATUS</div><div class="badge-val" id="status">STOP</div></div>
+        <div class="badge"><div class="badge-label">TEMPO</div><div class="badge-val" id="tempo">130</div></div>
+        <div class="badge"><div class="badge-label">NOMOR / TOTAL</div><div class="badge-val" id="nomorTotal">0 / 0</div></div>
+      </div>
+    </div>
+
+    <div class="mini-row">
+      <label class="mini-btn" for="file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>LAGU</label>
+      <input type="file" id="file" accept=".mp3,.wav,.ogg,.oga,.m4a,.aac,.flac,.opus,.webm,.flm,.mid,.midi,.ryz,.zip,audio/*,*/*" multiple>
+      <div class="volume-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg><span class="vol-label">Vol</span><input type="range" id="volume" min="-20" max="0" value="-6"></div>
+    </div>
+
+    <div class="cari-row">
+      <div class="search-container" id="searchContainer"><input type="text" id="searchInput" class="search-input" placeholder="Cari judul lagu..."></div>
+      <button class="cari-btn" id="favFilterBtn" style="padding:9px 14px" title="Tampilkan favorit saja"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12 2 15.09 8.63 22 9.27 16.5 14.14 18.18 21 12 17.3 5.82 21 7.5 14.14 2 9.27 8.91 8.63"></polygon></svg></button>
+      <button class="cari-btn" id="newestFilterBtn" style="padding:10px 14px;font-size:12px" title="Urutkan dari yang terbaru">New Song</button>
+      <button class="cari-btn" id="selectModeBtn" style="display:none">BATAL</button>
+      <button class="cari-btn" id="cariBtn">CARI</button>
+    </div>
+
+    <div class="list-card"><div class="list" id="list"><div style="opacity:0.5;text-align:center">Tidak ada lagu</div></div></div>
+
+    <div class="ganti-bg-row" id="bulkDeleteRow" style="display:none">
+      <button class="action-btn" id="bulkDeleteBtn" style="width:100%">Hapus Terpilih (0)</button>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn" id="hapusBtn">Hapus</button>
+      <button class="action-btn" id="shuffleBtn">Shuffle</button>
+      <button class="action-btn" id="repeatBtn">Repeat</button>
+    </div>
+
+    <div class="transport-grid">
+      <button class="grid-btn" id="tempoUp">Tempo +</button>
+      <button class="nav-arrow-btn" id="prevBtn">&#9650;</button>
+      <button id="playPauseBtn">
+        <span class="psp-label">PLAY / STOP /<br>PAUSE</span>
+      </button>
+      <button class="grid-btn" id="tempoDown">Tempo -</button>
+      <button class="nav-arrow-btn" id="nextBtn">&#9660;</button>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-doremi">
+    <div class="glass">
+      <div class="label">Tekan tombol untuk uji coba nada</div>
+      <div class="doremi-grid" id="doremiGrid"></div>
+    </div>
+    <div class="glass">
+      <div class="note-range-title">PILIH NOT</div>
+      <div class="note-range-row">
+        <select class="sis-select" id="noteRangeStart"></select>
+        <span class="note-range-dash">-</span>
+        <select class="sis-select" id="noteRangeEnd"></select>
+        <button class="cari-btn" id="noteRangeApplyBtn" style="padding:9px 16px;flex-shrink:0">Terapkan</button>
+      </div>
+      <div class="note-range-info">
+        <div id="noteRangeShowing">Menampilkan F1 &#8594; E6</div>
+        <div id="noteRangeCount">Jumlah Not: 60</div>
+      </div>
+      <button class="action-btn" id="noteRangeResetBtn" style="width:100%">Reset Rentang Not</button>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-tampilan">
+    <div class="glass">
+      <div class="label">WARNA TEMA</div>
+      <div class="color-grid" id="colorGrid"></div>
+      <div class="custom-color-row">
+        <input type="color" id="customColorPicker" value="#c81717">
+        <label for="customColorPicker">Warna Custom (Bebas Pilih)</label>
+      </div>
+      <button class="action-btn" id="rgbModeBtn" style="width:100%;margin-top:12px">Mode RGB (Warna Berganti Otomatis)</button>
+      <div class="label" style="margin-top:16px">GANTI BACKGROUND</div>
+      <div class="upload-zone" id="uploadZone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        <div class="upload-text">Ketuk untuk pilih gambar</div>
+        <div class="upload-hint">JPG, PNG, WEBP</div>
+      </div>
+      <input type="file" id="bgFile" accept="image/*" style="display:none">
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-suara">
+    <div class="glass">
+      <div class="label">SAMPLE SUARA</div>
+      <div class="sample-status" id="sampleStatus">Memakai synth bawaan</div>
+      <div class="upload-zone" id="sampleUploadZone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        <div class="upload-text">Ketuk untuk pilih sample suara</div>
+        <div class="upload-hint">MP3, WAV, OGG, FLM</div>
+      </div>
+      <input type="file" id="sampleFile" accept="audio/*,.flm" style="display:none">
+      <div class="label" style="margin-top:12px">NADA DASAR SAMPLE</div>
+      <select id="sampleBaseNote" class="search-input" style="width:100%;margin-bottom:10px"></select>
+      <button class="action-btn" id="resetSampleBtn" style="width:100%;margin-bottom:18px">Pakai Synth Default</button>
+
+      <div class="label">KARAKTER NOT BASS</div>
+      <div class="action-row" style="grid-template-columns:1fr 1fr;margin-bottom:18px">
+        <button class="action-btn" id="bassHardBtn">Keras</button>
+        <button class="action-btn" id="bassSoftBtn">Lembut</button>
+      </div>
+
+      <div class="label">KARAKTER DINAMIKA (BASS &amp; SULING)</div>
+      <div class="action-row" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+        <button class="action-btn" id="dynModeABtn" style="font-size:11.5px;line-height:1.3">Bass Lembut<br>Suling Menggelegar</button>
+        <button class="action-btn" id="dynModeBBtn" style="font-size:11.5px;line-height:1.3">Bass Menggelegar<br>Suling Lembut</button>
+      </div>
+      <button class="action-btn" id="dynModeNormalBtn" style="width:100%;margin-bottom:18px;font-size:12px">Normal (Seimbang)</button>
+
+      <div class="label">JUMLAH BALOK NOT VISUALIZER</div>
+      <div class="mini-row" style="margin-bottom:18px">
+        <input type="range" id="barCountRange" min="20" max="100" step="1" value="60" style="flex:1">
+        <span id="barCountVal" style="font-weight:800;min-width:34px;text-align:right">60</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="uploadProgressOverlay">
+  <div class="modal-box" style="text-align:center">
+    <div class="upload-spinner" id="uploadSpinner"></div>
+    <div class="modal-header" style="justify-content:center;margin-bottom:6px"><span id="uploadProgressTitle">Menambahkan lagu...</span></div>
+    <div class="upload-progress-current" id="uploadProgressCurrent">-</div>
+    <div class="upload-progress-count" id="uploadProgressCount">000 / 000</div>
+    <div class="upload-progress-bar"><div class="upload-progress-fill" id="uploadProgressFill"></div></div>
+  </div>
+</div>
+
+<script id="ryzzLibraryData" type="application/octet-stream-b64"></script>
+<script>
+let files = [];
+let idx = 0;
+let playing = false;
+let paused = false;
+let timerInterval;
+let midiReady = false;
+let bpm = 130;
+let currentTime = 0;
+let songDuration = 0;
+let searchQuery = '';
+let shuffleOn = false;
+let repeatMode = 'off';
+let isSeeking = false;
+let customBgImage = null;
+let currentAccentColor = '#c81717';
+let selectMode = false;
+let selectedIndices = new Set();
+const audioPlayer = new Audio();
+audioPlayer.preload = 'auto';
+audioPlayer.style.display = 'none';
+document.body.appendChild(audioPlayer);
+audioPlayer.onended = () => onSongEnded();
+
+function arrayBufferToBase64(buffer){
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for(let i=0; i<bytes.length; i+=chunkSize){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunkSize));
+  }
+  return btoa(binary);
+}
+
+function base64ToUint8Array(base64){
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function guessMime(name){
+  const ext = name.split('.').pop().toLowerCase();
+  const map = {mp3:'audio/mpeg', wav:'audio/wav', ogg:'audio/ogg', oga:'audio/ogg', m4a:'audio/mp4', aac:'audio/aac', flac:'audio/flac', opus:'audio/opus', webm:'audio/webm', flm:'application/octet-stream'};
+  return map[ext] || 'audio/mpeg';
+}
+
+function getAudioDuration(url){
+  return new Promise(resolve=>{
+    const a = new Audio();
+    a.preload = 'metadata';
+    a.onloadedmetadata = () => resolve(a.duration || 0);
+    a.onerror = () => resolve(0);
+    a.src = url;
+  });
+}
+
+function dbToLinear(db){
+  return Math.min(1, Math.max(0, Math.pow(10, db/20)));
+}
+
+const RYZ_XOR_KEY = 'RYZ123';
+const RYZ_HEADER_LEN = 12;
+
+function xorWithKey(bytes, key){
+  const keyBytes = new Uint8Array(key.length);
+  for(let i=0;i<key.length;i++) keyBytes[i] = key.charCodeAt(i);
+  const out = new Uint8Array(bytes.length);
+  for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+  return out;
+}
+function hasMThdMagic(bytes){
+  return bytes.length >= 4 && bytes[0]===0x4D && bytes[1]===0x54 && bytes[2]===0x68 && bytes[3]===0x64;
+}
+function decodeRyzBytes(input){
+  const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+  if(bytes.length > RYZ_HEADER_LEN && bytes[0]===0x4E && bytes[1]===0x59 && bytes[2]===0x4F){
+    const body = bytes.subarray(RYZ_HEADER_LEN);
+    const decoded = xorWithKey(body, RYZ_XOR_KEY);
+    if(hasMThdMagic(decoded)) return decoded.buffer;
+  }
+  const decodedRaw = xorWithKey(bytes, RYZ_XOR_KEY);
+  if(hasMThdMagic(decodedRaw)) return decodedRaw.buffer;
+  return null;
+}
+
+function expandZipEntries(arrayBuffer){
+  const out = [];
+  if(!window.fflate) return out;
+  let unzipped;
+  try{ unzipped = fflate.unzipSync(new Uint8Array(arrayBuffer)); }
+  catch(e){ console.error('Gagal membuka ZIP:', e); return out; }
+  for(const path in unzipped){
+    const base = path.split('/').pop();
+    if(!base) continue;
+    const bytes = unzipped[path];
+    if(!bytes || !bytes.length) continue;
+    if(/\.ryz$/i.test(base)){
+      const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+      const dec = decodeRyzBytes(buf);
+      if(!dec) continue;
+      out.push({ name: base, buf: dec, isMidi: true });
+    } else if(/\.(mid|midi)$/i.test(base)){
+      out.push({ name: base, buf: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), isMidi: true });
+    } else if(AUDIO_EXT_RE.test(base)){
+      out.push({ name: base, buf: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), isMidi: false });
+    }
+  }
+  return out;
+}
+
+async function expandFileList(fileList){
+  const out = [];
+  for(const f of fileList){
+    const lower = f.name.toLowerCase();
+    if(lower.endsWith('.zip')){
+      try{
+        const buf = await f.arrayBuffer();
+        out.push(...expandZipEntries(buf));
+      }catch(e){ console.error('Gagal membaca ZIP:', f.name, e); }
+      continue;
+    }
+    if(lower.endsWith('.ryz')){
+      try{
+        const buf = await f.arrayBuffer();
+        const dec = decodeRyzBytes(buf);
+        if(dec) out.push({ name: f.name, buf: dec, isMidi: true });
+        else console.error('File .ryz tidak valid / kunci tidak cocok:', f.name);
+      }catch(e){ console.error('Gagal membaca RYZ:', f.name, e); }
+      continue;
+    }
+    try{
+      const buf = await f.arrayBuffer();
+      out.push({ name: f.name, buf, isMidi: /\.(mid|midi)$/i.test(f.name) });
+    }catch(e){ console.error('Gagal membaca file:', f.name, e); }
+  }
+  return out;
+}
+
+window.addEventListener('load', async () => {
+  midiReady = true;
+  customBgImage = localStorage.getItem('ryzzBgImage');
+  currentAccentColor = localStorage.getItem('ryzzAccentColor') || '#c81717';
+  applyBackground();
+  initSampleBaseNoteSelect();
+  const savedSampleAudio = localStorage.getItem('ryzzSampleAudio');
+  if(savedSampleAudio){
+    const savedBase = localStorage.getItem('ryzzSampleBaseNote') || 'C4';
+    const savedName = localStorage.getItem('ryzzSampleName') || 'sample.mp3';
+    loadCustomSample(savedSampleAudio, savedBase, savedName);
+  }
+  await loadBuiltinLibrary();
+  await loadSavedMidi();
+  initDoremi();
+  initVisualizer();
+  startTitleMarqueeLoop();
+  initWarna();
+  if(localStorage.getItem('ryzzAccentMode') === 'rgb') startRgbMode();
+  document.getElementById('volume').dispatchEvent(new Event('input'));
+})
+
+const AUDIO_EXT_RE = /\.(mp3|wav|ogg|oga|m4a|aac|flac|opus|webm|flm)$/i;
+async function loadBuiltinLibrary(){
+  const dataEl = document.getElementById('ryzzLibraryData');
+  if(!dataEl || !window.fflate) return;
+  try{
+    const zipBytes = base64ToUint8Array(dataEl.textContent.trim());
+    const unzipped = fflate.unzipSync(zipBytes);
+    const deleted = new Set(JSON.parse(localStorage.getItem('ryzzBuiltinDeleted') || '[]'));
+    const builtinFiles = [];
+    for(const path in unzipped){
+      let base = path.split('/').pop();
+      if(!base) continue;
+      const isRyz = /\.ryz$/i.test(base);
+      let isMidi = /\.(mid|midi)$/i.test(base);
+      const isAudio = !isRyz && AUDIO_EXT_RE.test(base);
+      if(!isMidi && !isAudio && !isRyz) continue;
+      const bytes = unzipped[path];
+      let buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+      if(isRyz){
+        const dec = decodeRyzBytes(buf);
+        if(!dec) continue;
+        buf = dec;
+        isMidi = true;
+      }
+      if(deleted.has(base)) continue;
+      const base64 = arrayBufferToBase64(buf);
+      if(isMidi){
+        let midi;
+        try{ midi = new Midi(buf); }
+        catch(e){ continue; }
+        builtinFiles.push({ name: base, origName: base, type:'midi', midi, base64, builtin:true, addedAt:0 });
+      } else {
+        const mime = guessMime(base);
+        const dataUrl = `data:${mime};base64,${base64}`;
+        let duration = 0;
+        try{ duration = await getAudioDuration(dataUrl); }catch(e){ duration = 0; }
+        builtinFiles.push({ name: base, origName: base, type:'audio', mime, base64, duration, builtin:true, undecodable: !duration, addedAt:0 });
+      }
+    }
+    builtinFiles.sort((a,b)=> a.origName.localeCompare(b.origName, undefined, {numeric:true}));
+    files.push(...builtinFiles);
+  }catch(e){ console.error('Gagal memuat library bawaan:', e); }
+}
+
+function hexToRgbArr(hex){
+  hex = hex.replace('#', '');
+  if(hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const num = parseInt(hex, 16);
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+}
+function mixRgb(rgb, target, amount){
+  return rgb.map((c, i) => Math.round(c + (target[i] - c) * amount));
+}
+function applyAccentTheme(hex){
+  const base = hexToRgbArr(hex);
+  const strong = mixRgb(base, [0, 0, 0], 0.14);
+  const light = mixRgb(base, [255, 255, 255], 0.32);
+  const lightest = mixRgb(base, [255, 255, 255], 0.58);
+  const root = document.documentElement.style;
+  root.setProperty('--accent-rgb', base.join(','));
+  root.setProperty('--accent-strong-rgb', strong.join(','));
+  root.setProperty('--accent-light-rgb', light.join(','));
+  root.setProperty('--accent-lightest-rgb', lightest.join(','));
+}
+function applyBackground(){
+  applyAccentTheme(currentAccentColor);
+  const alphaHex = '55';
+  const glow = `linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.5) 35%, ${currentAccentColor}${alphaHex} 55%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0.78) 100%)`;
+  const bgImage = customBgImage || 'https://raw.githubusercontent.com/pi-pop/bg/main/bg.png';
+  document.body.style.background = `${glow}, url('${bgImage}') center/cover no-repeat fixed`;
+}
+
+document.getElementById('menuBtn').onclick = () => {
+  document.getElementById('menuDropdown').classList.toggle('open');
+}
+const TAB_LABELS = { main:'MENU', doremi:'DOREMI', tampilan:'TAMPILAN', suara:'SUARA' };
+document.querySelectorAll('.menu-dropdown button').forEach(btn=>{
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-content').forEach(c=>{ c.classList.remove('active'); c.classList.remove('show'); });
+    const next = document.getElementById('tab-'+btn.dataset.tab);
+    next.classList.add('active');
+    requestAnimationFrame(()=> requestAnimationFrame(()=> next.classList.add('show')));
+    document.getElementById('menuDropdown').classList.remove('open');
+    document.getElementById('menuBtn').innerHTML = (TAB_LABELS[btn.dataset.tab] || 'MENU') + ' ▾';
+    if(btn.dataset.tab === 'suara') refreshAdvSettingsUI();
+  }
+})
+
+const BASS_THRESHOLD_MIDI = 48;
+let bassHardness = localStorage.getItem('ryzzBassHardness') || 'hard';
+
+function buildTrebleSynth(){
+  return new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'square' },
+    envelope: { attack: 0.006, decay: 0.001, sustain: 1, release: 0.09 },
+    volume: -16
+  }).toDestination();
+}
+function buildBassSynth(hardness){
+  const wave = hardness === 'soft' ? 'triangle' : 'square';
+  const env = hardness === 'soft'
+    ? { attack: 0.02, decay: 0.06, sustain: 0.8, release: 0.18 }
+    : { attack: 0.006, decay: 0.001, sustain: 1, release: 0.09 };
+  return new Tone.PolySynth(Tone.Synth, { oscillator: { type: wave }, envelope: env, volume: -14 }).toDestination();
+}
+
+let trebleSynth = buildTrebleSynth();
+trebleSynth.maxPolyphony = 18;
+let bassSynth = buildBassSynth(bassHardness);
+bassSynth.maxPolyphony = 18;
+let customSample = null;
+let customSampleLoaded = false;
+let customSampleName = null;
+
+function setBassHardness(h){
+  bassHardness = h;
+  localStorage.setItem('ryzzBassHardness', h);
+  const oldBass = bassSynth;
+  bassSynth = buildBassSynth(h);
+  bassSynth.maxPolyphony = 18;
+  applyVolumeWithOffsets();
+  oldBass.dispose();
+}
+
+const DYNAMIC_OFFSETS = {
+  normal: { bass: 0, treble: 0 },
+  bassSoftTrebleLoud: { bass: -8, treble: 8 },
+  bassLoudTrebleSoft: { bass: 8, treble: -8 }
+};
+let dynamicMode = localStorage.getItem('ryzzDynamicMode') || 'normal';
+function applyVolumeWithOffsets(){
+  const db = parseFloat(document.getElementById('volume').value);
+  const off = DYNAMIC_OFFSETS[dynamicMode] || DYNAMIC_OFFSETS.normal;
+  trebleSynth.volume.value = db + off.treble;
+  bassSynth.volume.value = db + off.bass;
+  if(customSample) customSample.volume.value = db;
+  audioPlayer.volume = dbToLinear(db);
+}
+function applyDynamicMode(mode){
+  dynamicMode = mode;
+  localStorage.setItem('ryzzDynamicMode', mode);
+  if(mode === 'bassSoftTrebleLoud') setBassHardness('soft');
+  else if(mode === 'bassLoudTrebleSoft') setBassHardness('hard');
+  else applyVolumeWithOffsets();
+  refreshAdvSettingsUI();
+}
+
+function loadCustomSample(dataUrl, baseNote, name){
+  return new Promise((resolve) => {
+    customSampleLoaded = false;
+    const vol = parseFloat(document.getElementById('volume').value);
+    const s = new Tone.Sampler({
+      urls: { [baseNote]: dataUrl },
+      release: 0.3,
+      volume: vol,
+      onload: () => { customSampleLoaded = true; resolve(true); },
+      onerror: () => { resolve(false); }
+    }).toDestination();
+    customSample = s;
+    customSampleName = name;
+  });
+}
+
+function getEngineForNote(midiNum){
+  if(customSample && customSampleLoaded) return customSample;
+  if(midiNum !== undefined && midiNum !== null && midiNum < BASS_THRESHOLD_MIDI) return bassSynth;
+  return trebleSynth;
+}
+function triggerNote(noteName, duration, time, velocity, midiNum){
+  getEngineForNote(midiNum).triggerAttackRelease(noteName, duration, time, velocity);
+}
+
+Tone.Transport.bpm.value = bpm;
+document.getElementById('volume').oninput = () => {
+  applyVolumeWithOffsets();
+};
+
+document.getElementById('tempoUp').onclick = () => { if(bpm < 250) { bpm += 5; setTempo(); } }
+document.getElementById('tempoDown').onclick = () => { if(bpm > 60) { bpm -= 5; setTempo(); } }
+function setTempo(){ Tone.Transport.bpm.value = bpm; document.getElementById('tempo').innerText = bpm; }
+
+let fbApp = null;
+let fbDb = null;
+let fbUnsub = null;
+const FB_COLLECTION = 'midi_songs';
+function getCloudHidden(){ return new Set(JSON.parse(localStorage.getItem('ryzzCloudHidden') || '[]')); }
+
+function connectFirebase(configStr){
+  let config;
+  try{ config = JSON.parse(configStr); }
+  catch(e){ return; }
+  try{
+    if(fbUnsub){ fbUnsub(); fbUnsub = null; }
+    if(fbApp){ try{ firebase.app().delete(); }catch(e){} }
+    fbApp = firebase.initializeApp(config);
+    fbDb = firebase.firestore();
+    fbDb.enablePersistence({ synchronizeTabs: true }).catch(err => {
+      console.warn('Cache offline Firestore tidak aktif:', err.code);
+    });
+    const hidden = getCloudHidden();
+    fbUnsub = fbDb.collection(FB_COLLECTION).orderBy('addedAt', 'asc').onSnapshot(snapshot => {
+      let changed = false;
+      snapshot.docChanges().forEach(change => {
+        const doc = change.doc;
+        const data = doc.data();
+        if(change.type === 'removed'){
+          const before = files.length;
+          files = files.filter(f => !(f.cloud && f.cloudId === doc.id));
+          if(files.length !== before) changed = true;
+          return;
+        }
+        if(hidden.has(doc.id)) return;
+        const addedAtMs = data.addedAt && data.addedAt.toMillis ? data.addedAt.toMillis() : Date.now();
+        const existingIdx = files.findIndex(f => f.cloud && f.cloudId === doc.id);
+        let entry;
+        if(data.type === 'midi'){
+          let midi;
+          try{ midi = new Midi(base64ToUint8Array(data.data).buffer); }
+          catch(e){ return; }
+          entry = { name:data.name, type:'midi', midi, base64:data.data, cloud:true, cloudId:doc.id, addedAt:addedAtMs };
+        } else {
+          entry = { name:data.name, type:'audio', base64:data.data, mime:data.mime, duration:data.duration||0, cloud:true, cloudId:doc.id, addedAt:addedAtMs };
+        }
+        if(existingIdx >= 0) files[existingIdx] = entry;
+        else insertSorted(entry);
+        changed = true;
+      });
+      if(changed){ renderList(); updateNowInfo(); }
+    }, err => {
+      console.error('Firestore error:', err);
+    });
+  }catch(e){
+    console.error(e);
+  }
+}
+
+const DEFAULT_FIREBASE_CONFIG = JSON.stringify({
+  apiKey: "AIzaSyDpRllLIJ346sw9FNM0KF7H1B_HAftAIkI",
+  authDomain: "ryzmusical.firebaseapp.com",
+  projectId: "ryzmusical",
+  storageBucket: "ryzmusical.firebasestorage.app",
+  messagingSenderId: "934193972979",
+  appId: "1:934193972979:web:a31ffe822e7d2e9fd8d986",
+  measurementId: "G-80WXWJD34L"
+});
+connectFirebase(DEFAULT_FIREBASE_CONFIG);
+
+function transposeNote(noteName) { return noteName; }
+
+const TITLE_MARQUEE_IDLE_MS = 3000;
+const TITLE_MARQUEE_SPEED_PX_MS = 0.035;
+let titleMarqueeState = 0;
+let titleMarqueeStateStart = 0;
+function resetTitleMarquee(){
+  titleMarqueeState = 0;
+  titleMarqueeStateStart = 0;
+  const inner = document.getElementById('nowTitleInner');
+  if(inner) inner.style.transform = 'translateX(0px)';
+}
+function startTitleMarqueeLoop(){
+  function step(now){
+    const container = document.getElementById('nowTitle');
+    const inner = document.getElementById('nowTitleInner');
+    requestAnimationFrame(step);
+    if(!container || !inner) return;
+    const areaWidth = container.clientWidth;
+    const textWidth = inner.scrollWidth;
+    if(textWidth <= areaWidth){
+      inner.style.transform = 'translateX(0px)';
+      titleMarqueeState = 0;
+      titleMarqueeStateStart = 0;
+      return;
+    }
+    if(titleMarqueeStateStart === 0) titleMarqueeStateStart = now;
+    const elapsed = now - titleMarqueeStateStart;
+    if(titleMarqueeState === 0){
+      inner.style.transform = 'translateX(0px)';
+      if(elapsed >= TITLE_MARQUEE_IDLE_MS){
+        titleMarqueeState = 1;
+        titleMarqueeStateStart = now;
+      }
+    } else if(titleMarqueeState === 1){
+      const traveled = elapsed * TITLE_MARQUEE_SPEED_PX_MS;
+      const totalTravel = textWidth + areaWidth;
+      if(traveled >= totalTravel){
+        titleMarqueeState = 2;
+        titleMarqueeStateStart = now;
+        inner.style.transform = `translateX(${areaWidth}px)`;
+      } else {
+        inner.style.transform = `translateX(-${traveled}px)`;
+      }
+    } else {
+      const traveled = elapsed * TITLE_MARQUEE_SPEED_PX_MS;
+      if(traveled >= areaWidth){
+        titleMarqueeState = 0;
+        titleMarqueeStateStart = now;
+        inner.style.transform = 'translateX(0px)';
+      } else {
+        inner.style.transform = `translateX(${areaWidth - traveled}px)`;
+      }
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+function formatTime(sec){
+  sec = Math.max(0, Math.floor(sec || 0));
+  let m = String(Math.floor(sec/60)).padStart(2,'0');
+  let s = String(sec%60).padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+const NOTE_RANGE_MIN = 12;
+const NOTE_RANGE_MAX = 127;
+const DOREMI_DEFAULT_START = 29;
+const DOREMI_DEFAULT_END = 88;
+let doremiStart = DOREMI_DEFAULT_START;
+let doremiEnd = DOREMI_DEFAULT_END;
+
+function midiNoteName(m){ return Tone.Frequency(m, "midi").toNote(); }
+
+function populateNoteRangeSelects(){
+  const startSel = document.getElementById('noteRangeStart');
+  const endSel = document.getElementById('noteRangeEnd');
+  startSel.innerHTML = ''; endSel.innerHTML = '';
+  for(let m=NOTE_RANGE_MIN; m<=NOTE_RANGE_MAX; m++){
+    const name = midiNoteName(m);
+    const o1 = document.createElement('option'); o1.value = String(m); o1.innerText = name; startSel.appendChild(o1);
+    const o2 = document.createElement('option'); o2.value = String(m); o2.innerText = name; endSel.appendChild(o2);
+  }
+  startSel.value = String(doremiStart);
+  endSel.value = String(doremiEnd);
+}
+
+function updateDoremiRangeInfo(){
+  document.getElementById('noteRangeShowing').innerText = 'Menampilkan ' + midiNoteName(doremiStart) + ' \u2192 ' + midiNoteName(doremiEnd);
+  document.getElementById('noteRangeCount').innerText = 'Jumlah Not: ' + (doremiEnd - doremiStart + 1);
+}
+
+function initDoremi(){
+  const grid = document.getElementById('doremiGrid');
+  grid.innerHTML = '';
+  for(let midiNote=doremiStart; midiNote<=doremiEnd; midiNote++){
+    const noteName = midiNoteName(midiNote);
+    const btn = document.createElement('div');
+    btn.className = 'doremi-btn' + (noteName.includes('#')? ' black' : '');
+    btn.innerText = noteName;
+    btn.onclick = () => { triggerNote(noteName, "8n", undefined, 1, midiNote); }
+    grid.appendChild(btn);
+  }
+  populateNoteRangeSelects();
+  updateDoremiRangeInfo();
+}
+
+document.getElementById('noteRangeApplyBtn').onclick = () => {
+  let s = parseInt(document.getElementById('noteRangeStart').value, 10);
+  let e = parseInt(document.getElementById('noteRangeEnd').value, 10);
+  if(isNaN(s) || isNaN(e)) return;
+  if(s > e){ const t = s; s = e; e = t; }
+  doremiStart = s; doremiEnd = e;
+  initDoremi();
+};
+document.getElementById('noteRangeResetBtn').onclick = () => {
+  doremiStart = DOREMI_DEFAULT_START;
+  doremiEnd = DOREMI_DEFAULT_END;
+  initDoremi();
+};
+
+let vizMinNote = 29;
+let vizMaxNote = 88;
+let vizBarCount = parseInt(localStorage.getItem('ryzzBarCount'), 10) || 60;
+let visualizerBars = [];
+let visualizerPeaks = [];
+function initVisualizer(){
+  setBarCount(vizBarCount);
+}
+function setBarCount(n){
+  vizBarCount = Math.max(4, Math.min(200, n));
+  localStorage.setItem('ryzzBarCount', vizBarCount);
+  const container = document.getElementById('noteVisualizer');
+  container.innerHTML = '';
+  visualizerBars = [];
+  visualizerPeaks = [];
+  for(let i=0; i<vizBarCount; i++){
+    const bar = document.createElement('div');
+    bar.className = 'nv-bar';
+    const peak = document.createElement('div');
+    peak.className = 'nv-peak';
+    bar.appendChild(peak);
+    container.appendChild(bar);
+    visualizerBars.push(bar);
+    visualizerPeaks.push(peak);
+  }
+}
+function computeVizRangeForMidi(midi){
+  let lo = Infinity, hi = -Infinity;
+  midi.tracks.forEach(track => track.notes.forEach(n => {
+    if(n.midi < lo) lo = n.midi;
+    if(n.midi > hi) hi = n.midi;
+  }));
+  if(lo === Infinity){ vizMinNote = 29; vizMaxNote = 88; return; }
+  vizMinNote = lo;
+  vizMaxNote = Math.max(hi, lo + 1);
+}
+function barIndexForNote(midiNote){
+  const span = vizMaxNote - vizMinNote;
+  const maxIdx = visualizerBars.length - 1;
+  if(maxIdx <= 0) return 0;
+  if(span <= maxIdx) return Math.round(midiNote - vizMinNote);
+  return Math.round((midiNote - vizMinNote) / span * maxIdx);
+}
+function setBarActive(midiNote, on, velocity){
+  const i = barIndexForNote(midiNote);
+  if(i < 0 || i >= visualizerBars.length) return;
+  const bar = visualizerBars[i];
+  const peak = visualizerPeaks[i];
+  if(on){
+    const h = 22 + Math.max(0, Math.min(1, velocity)) * 78;
+    bar.style.height = h + '%';
+    peak.style.bottom = h + '%';
+    bar.classList.add('on');
+    peak.classList.add('on');
+  } else {
+    bar.style.height = '6%';
+    peak.style.bottom = '6%';
+    bar.classList.remove('on');
+    peak.classList.remove('on');
+  }
+}
+function resetVisualizer(){
+  visualizerBars.forEach((b, i) => {
+    b.style.height = '6%';
+    b.classList.remove('on');
+    visualizerPeaks[i].style.bottom = '6%';
+    visualizerPeaks[i].classList.remove('on');
+  });
+}
+
+function initWarna(){
+  const colors = [
+    '#000000', '#1a1a2e', '#16213e', '#0f3460', '#533483', '#e94560',
+    '#ff9a00', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7',
+    '#fd79a8', '#fdcb6e', '#6c5ce7', '#a29bfe', '#74b9ff', '#55efc4'
+  ];
+  const grid = document.getElementById('colorGrid');
+  const savedIndex = parseInt(localStorage.getItem('ryzzAccentColorIndex'), 10);
+  colors.forEach((color, i)=>{
+    const btn = document.createElement('div');
+    btn.className = 'color-btn';
+    btn.style.background = color;
+    btn.onclick = () => {
+      stopRgbMode();
+      localStorage.setItem('ryzzAccentMode', 'solid');
+      document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentAccentColor = color;
+      localStorage.setItem('ryzzAccentColor', color);
+      localStorage.setItem('ryzzAccentColorIndex', i);
+      document.getElementById('customColorPicker').value = color;
+      applyBackground();
+    }
+    grid.appendChild(btn);
+    if(i === (isNaN(savedIndex) ? 0 : savedIndex)) btn.classList.add('active');
+  })
+}
+
+let rgbInterval = null;
+let rgbHue = 0;
+function hslToHex(h, s, l){
+  s /= 100; l /= 100;
+  const k = n => (n + h/30) % 12;
+  const a = s * Math.min(l, 1-l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n), 1)));
+  const toHex = x => Math.round(255 * x).toString(16).padStart(2, '0');
+  return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+}
+function startRgbMode(){
+  if(rgbInterval) return;
+  document.getElementById('rgbModeBtn').classList.add('active-toggle');
+  document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));
+  localStorage.setItem('ryzzAccentMode', 'rgb');
+  rgbInterval = setInterval(() => {
+    rgbHue = (rgbHue + 2) % 360;
+    currentAccentColor = hslToHex(rgbHue, 85, 50);
+    applyBackground();
+  }, 60);
+}
+function stopRgbMode(){
+  if(!rgbInterval) return;
+  clearInterval(rgbInterval);
+  rgbInterval = null;
+  document.getElementById('rgbModeBtn').classList.remove('active-toggle');
+}
+document.getElementById('rgbModeBtn').onclick = () => {
+  if(rgbInterval){
+    stopRgbMode();
+    localStorage.setItem('ryzzAccentMode', 'solid');
+    currentAccentColor = localStorage.getItem('ryzzAccentColor') || '#c81717';
+    applyBackground();
+  } else {
+    startRgbMode();
+  }
+};
+
+document.getElementById('customColorPicker').value = localStorage.getItem('ryzzAccentColor') || '#c81717';
+document.getElementById('customColorPicker').oninput = e => {
+  stopRgbMode();
+  localStorage.setItem('ryzzAccentMode', 'solid');
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+  localStorage.removeItem('ryzzAccentColorIndex');
+  currentAccentColor = e.target.value;
+  localStorage.setItem('ryzzAccentColor', currentAccentColor);
+  applyBackground();
+};
+
+const SAMPLE_BASE_NOTES = ['C2','D2','E2','F2','G2','A2','B2','C3','D3','E3','F3','G3','A3','B3','C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','G5','A5','B5','C6'];
+function initSampleBaseNoteSelect(){
+  const sel = document.getElementById('sampleBaseNote');
+  const savedBase = localStorage.getItem('ryzzSampleBaseNote') || 'C4';
+  SAMPLE_BASE_NOTES.forEach(n=>{
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    if(n === savedBase) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function refreshAdvSettingsUI(){
+  document.getElementById('sampleStatus').innerText = customSampleName ? ('Aktif: ' + customSampleName) : 'Memakai synth bawaan';
+  document.getElementById('bassHardBtn').classList.toggle('active-toggle', bassHardness === 'hard' && dynamicMode === 'normal');
+  document.getElementById('bassSoftBtn').classList.toggle('active-toggle', bassHardness === 'soft' && dynamicMode === 'normal');
+  document.getElementById('dynModeABtn').classList.toggle('active-toggle', dynamicMode === 'bassSoftTrebleLoud');
+  document.getElementById('dynModeBBtn').classList.toggle('active-toggle', dynamicMode === 'bassLoudTrebleSoft');
+  document.getElementById('dynModeNormalBtn').classList.toggle('active-toggle', dynamicMode === 'normal');
+  document.getElementById('barCountRange').value = vizBarCount;
+  document.getElementById('barCountVal').innerText = vizBarCount;
+}
+
+document.getElementById('sampleUploadZone').onclick = () => document.getElementById('sampleFile').click();
+document.getElementById('sampleFile').onchange = async e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  document.getElementById('sampleStatus').innerText = 'Memuat sample...';
+  const buf = await f.arrayBuffer();
+  const base64 = arrayBufferToBase64(buf);
+  const isFlm = /\.flm$/i.test(f.name);
+  const mime = f.type || (isFlm ? 'application/octet-stream' : 'audio/mpeg');
+  const dataUrl = `data:${mime};base64,${base64}`;
+  const baseNote = document.getElementById('sampleBaseNote').value;
+  const ok = await loadCustomSample(dataUrl, baseNote, f.name);
+  if(!ok){
+    customSample = null;
+    customSampleLoaded = false;
+    customSampleName = null;
+    if(isFlm){
+      alert('File .flm ini adalah project FL Studio Mobile (bukan file audio biasa), jadi isinya tidak bisa langsung dipakai sebagai sample suara. Export dulu suaranya jadi file WAV/MP3 dari FL Studio Mobile, baru upload hasil export-nya di sini.');
+    } else {
+      alert('Gagal memuat file ini sebagai sample suara. Pastikan filenya format audio yang didukung (MP3, WAV, OGG, dll).');
+    }
+    refreshAdvSettingsUI();
+    e.target.value = '';
+    return;
+  }
+  try {
+    localStorage.setItem('ryzzSampleAudio', dataUrl);
+    localStorage.setItem('ryzzSampleBaseNote', baseNote);
+    localStorage.setItem('ryzzSampleName', f.name);
+  } catch(err){
+    alert('Sample berhasil dipakai untuk sesi ini, tapi ukurannya terlalu besar untuk disimpan permanen (akan kembali ke synth default kalau halaman di-reload).');
+  }
+  refreshAdvSettingsUI();
+  e.target.value = '';
+}
+
+document.getElementById('resetSampleBtn').onclick = () => {
+  customSample = null;
+  customSampleLoaded = false;
+  customSampleName = null;
+  localStorage.removeItem('ryzzSampleAudio');
+  localStorage.removeItem('ryzzSampleBaseNote');
+  localStorage.removeItem('ryzzSampleName');
+  refreshAdvSettingsUI();
+}
+
+document.getElementById('bassHardBtn').onclick = () => { dynamicMode = 'normal'; localStorage.setItem('ryzzDynamicMode','normal'); setBassHardness('hard'); refreshAdvSettingsUI(); }
+document.getElementById('bassSoftBtn').onclick = () => { dynamicMode = 'normal'; localStorage.setItem('ryzzDynamicMode','normal'); setBassHardness('soft'); refreshAdvSettingsUI(); }
+document.getElementById('dynModeABtn').onclick = () => { applyDynamicMode('bassSoftTrebleLoud'); }
+document.getElementById('dynModeBBtn').onclick = () => { applyDynamicMode('bassLoudTrebleSoft'); }
+document.getElementById('dynModeNormalBtn').onclick = () => { applyDynamicMode('normal'); }
+
+document.getElementById('barCountRange').oninput = e => {
+  const n = parseInt(e.target.value, 10);
+  document.getElementById('barCountVal').innerText = n;
+  setBarCount(n);
+}
+document.getElementById('uploadZone').onclick = () => document.getElementById('bgFile').click();
+
+document.getElementById('bgFile').onchange = e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    customBgImage = reader.result;
+    localStorage.setItem('ryzzBgImage', customBgImage);
+    applyBackground();
+  };
+  reader.readAsDataURL(f);
+}
+
+document.getElementById('hapusBtn').onclick = () => {
+  if(files.length === 0) return;
+  selectMode = true;
+  selectedIndices = new Set(files.map((_,i)=>i));
+  const btn = document.getElementById('selectModeBtn');
+  btn.style.display = '';
+  btn.classList.add('active');
+  btn.innerText = 'BATAL';
+  renderList();
+  updateBulkDeleteUI();
+}
+
+document.getElementById('shuffleBtn').onclick = () => {
+  shuffleOn = !shuffleOn;
+  document.getElementById('shuffleBtn').classList.toggle('active-toggle', shuffleOn);
+}
+
+document.getElementById('repeatBtn').onclick = () => {
+  repeatMode = repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off';
+  const btn = document.getElementById('repeatBtn');
+  btn.classList.toggle('active-toggle', repeatMode !== 'off');
+  btn.innerText = repeatMode === 'one' ? 'Repeat: 1' : 'Repeat';
+}
+
+const LOCAL_DB_NAME = 'ryzzLocalSongsDB';
+const LOCAL_DB_STORE = 'songs';
+let localDbPromise = null;
+function openLocalDb(){
+  if(localDbPromise) return localDbPromise;
+  localDbPromise = new Promise((resolve, reject) => {
+    if(!window.indexedDB){ reject(new Error('IndexedDB tidak didukung')); return; }
+    const req = indexedDB.open(LOCAL_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if(!db.objectStoreNames.contains(LOCAL_DB_STORE)){
+        db.createObjectStore(LOCAL_DB_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return localDbPromise;
+}
+function genLocalId(){
+  return 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+}
+async function localDbPut(record){
+  try{
+    const db = await openLocalDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(LOCAL_DB_STORE, 'readwrite');
+      tx.objectStore(LOCAL_DB_STORE).put(record);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+    return true;
+  }catch(err){
+    console.error('Gagal menyimpan lagu ke penyimpanan lokal', err);
+    return false;
+  }
+}
+async function localDbDelete(id){
+  if(!id) return;
+  try{
+    const db = await openLocalDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(LOCAL_DB_STORE, 'readwrite');
+      tx.objectStore(LOCAL_DB_STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }catch(err){
+    console.error('Gagal menghapus lagu di penyimpanan lokal', err);
+  }
+}
+async function localDbGetAll(){
+  try{
+    const db = await openLocalDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(LOCAL_DB_STORE, 'readonly');
+      const req = tx.objectStore(LOCAL_DB_STORE).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }catch(err){
+    console.error('Gagal membaca penyimpanan lokal', err);
+    return [];
+  }
+}
+async function migrateLegacyLocalStorageSongs(){
+  const saved = localStorage.getItem('ryzzMidiList');
+  if(!saved) return;
+  try{
+    const data = JSON.parse(saved);
+    for(const item of data){
+      const record = item.type === 'audio'
+        ? { id: genLocalId(), name:item.name, type:'audio', data:item.data, mime:item.mime, duration:item.duration, addedAt:item.addedAt || 0 }
+        : { id: genLocalId(), name:item.name, type:'midi', data:item.data, addedAt:item.addedAt || 0 };
+      await localDbPut(record);
+    }
+  }catch(err){
+    console.error('Gagal memindahkan lagu lama ke penyimpanan baru', err);
+  }
+  localStorage.removeItem('ryzzMidiList');
+}
+
+async function saveMidi(){
+  const localFiles = files.filter(f => !f.builtin && !f.cloud);
+  let ok = true;
+  for(const f of localFiles){
+    if(!f.localId) f.localId = genLocalId();
+    const record = f.type === 'audio'
+      ? { id:f.localId, name:f.name, type:'audio', data:f.base64, mime:f.mime, duration:f.duration, addedAt:f.addedAt }
+      : { id:f.localId, name:f.name, type:'midi', data:f.base64, addedAt:f.addedAt };
+    const put = await localDbPut(record);
+    if(!put) ok = false;
+  }
+  return ok;
+}
+
+async function loadSavedMidi(){
+  await migrateLegacyLocalStorageSongs();
+  const records = await localDbGetAll();
+  for(let item of records){
+    if(item.type === 'audio'){
+      files.push({name:item.name, type:'audio', base64:item.data, mime:item.mime, duration:item.duration, addedAt:item.addedAt || 0, localId:item.id});
+    } else {
+      const byteArray = base64ToUint8Array(item.data);
+      const midi = new Midi(byteArray.buffer);
+      files.push({name:item.name, type:'midi', midi, base64:item.data, addedAt:item.addedAt || 0, localId:item.id});
+    }
+  }
+  renderList();
+  updateNowInfo();
+}
+
+function openUploadProgress(total){
+  document.getElementById('uploadSpinner').classList.remove('done');
+  document.getElementById('uploadProgressTitle').innerText = 'Menambahkan lagu...';
+  document.getElementById('uploadProgressCurrent').innerText = '';
+  document.getElementById('uploadProgressCount').innerText = `${'0'.padStart(3,'0')} / ${String(total).padStart(3,'0')}`;
+  document.getElementById('uploadProgressFill').style.width = '0%';
+  document.getElementById('uploadProgressOverlay').classList.add('open');
+}
+function updateUploadProgress(cur, total, name){
+  document.getElementById('uploadProgressCurrent').innerText = name;
+  document.getElementById('uploadProgressCount').innerText = `${String(cur).padStart(3,'0')} / ${String(total).padStart(3,'0')}`;
+  document.getElementById('uploadProgressFill').style.width = Math.round(cur/total*100) + '%';
+}
+function closeUploadProgress(added, total, saveOk){
+  document.getElementById('uploadSpinner').classList.add('done');
+  document.getElementById('uploadProgressTitle').innerText = 'Selesai';
+  document.getElementById('uploadProgressCurrent').innerText = saveOk
+    ? `${added} dari ${total} lagu berhasil ditambahkan`
+    : `${added} lagu ditambahkan, tapi penyimpanan penuh (tidak permanen)`;
+  document.getElementById('uploadProgressFill').style.width = '100%';
+  setTimeout(() => { document.getElementById('uploadProgressOverlay').classList.remove('open'); }, 1100);
+}
+
+document.getElementById('file').onchange = async e=>{
+  if(!midiReady) return alert('Tunggu 2 detik, library masih loading...');
+  const rawList = Array.from(e.target.files);
+  if(rawList.length === 0) return;
+  const expanded = await expandFileList(rawList);
+  if(expanded.length === 0){
+    alert('Tidak ada lagu yang bisa dibaca dari file ini.');
+    e.target.value = '';
+    return;
+  }
+  const showProgress = expanded.length > 1;
+  if(showProgress) openUploadProgress(expanded.length);
+
+  let addedCount = 0;
+  for(let k = 0; k < expanded.length; k++){
+    const item = expanded[k];
+    if(showProgress) updateUploadProgress(k+1, expanded.length, item.name);
+    try {
+      const base64 = arrayBufferToBase64(item.buf);
+      if(item.isMidi){
+        const midi = new Midi(item.buf);
+        insertSorted({name:item.name, type:'midi', midi, base64, addedAt:Date.now()});
+      } else {
+        const mime = guessMime(item.name);
+        const duration = await getAudioDuration(`data:${mime};base64,${base64}`);
+        insertSorted({name:item.name, type:'audio', base64, mime, duration, addedAt:Date.now()});
+      }
+      addedCount++;
+    } catch(err){
+      console.error('Gagal menambah lagu', item.name, err);
+    }
+    await new Promise(requestAnimationFrame);
+  }
+
+  const saveOk = await saveMidi();
+  renderList();
+  updateNowInfo();
+  if(showProgress) closeUploadProgress(addedCount, expanded.length, saveOk);
+  else if(!saveOk) alert('Lagu berhasil ditambahkan, tapi gagal disimpan permanen di penyimpanan lokal browser.');
+  e.target.value = '';
+}
+
+document.getElementById('cariBtn').onclick = () => {
+  const container = document.getElementById('searchContainer');
+  const input = document.getElementById('searchInput');
+  const btn = document.getElementById('cariBtn');
+  const willOpen = !container.classList.contains('open');
+  container.classList.toggle('open', willOpen);
+  btn.classList.toggle('active', willOpen);
+  if(willOpen){
+    setTimeout(() => input.focus(), 400);
+  } else {
+    input.value = '';
+    searchQuery = '';
+    renderList();
+  }
+}
+document.getElementById('searchInput').oninput = e => { searchQuery = e.target.value.toLowerCase(); renderList(); }
+
+const NOTE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
+const RENAME_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+const STAR_ICON_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12 2 15.09 8.63 22 9.27 16.5 14.14 18.18 21 12 17.3 5.82 21 7.5 14.14 2 9.27 8.91 8.63"></polygon></svg>';
+const STAR_ICON_OUTLINE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12 2 15.09 8.63 22 9.27 16.5 14.14 18.18 21 12 17.3 5.82 21 7.5 14.14 2 9.27 8.91 8.63"></polygon></svg>';
+const NEW_SONG_WINDOW_MS = 10 * 60 * 60 * 1000;
+
+let favorites = new Set(JSON.parse(localStorage.getItem('ryzzFavorites') || '[]'));
+function favKey(f){ return f.cloud ? ('c:' + f.cloudId) : (f.builtin ? ('b:' + (f.origName || f.name)) : ('u:' + f.name)); }
+function isFavorite(f){ return favorites.has(favKey(f)); }
+function toggleFavorite(i){
+  const f = files[i];
+  const key = favKey(f);
+  if(favorites.has(key)) favorites.delete(key);
+  else favorites.add(key);
+  localStorage.setItem('ryzzFavorites', JSON.stringify([...favorites]));
+  renderList();
+}
+
+let showFavoritesOnly = false;
+let sortNewestFirst = false;
+document.getElementById('favFilterBtn').onclick = () => {
+  showFavoritesOnly = !showFavoritesOnly;
+  document.getElementById('favFilterBtn').classList.toggle('active', showFavoritesOnly);
+  renderList();
+}
+document.getElementById('newestFilterBtn').onclick = () => {
+  sortNewestFirst = !sortNewestFirst;
+  document.getElementById('newestFilterBtn').classList.toggle('active', sortNewestFirst);
+  renderList();
+}
+
+function extractSongCode(name){
+  const m = name.match(/^\s*(\d+)/);
+  return m ? parseInt(m[1], 10) : Number.MAX_SAFE_INTEGER;
+}
+function compareByCode(nameA, nameB){
+  const ca = extractSongCode(nameA), cb = extractSongCode(nameB);
+  if(ca !== cb) return ca - cb;
+  return nameA.localeCompare(nameB, undefined, {numeric:true});
+}
+function defaultSortedIndices(){
+  return files.map((_,i)=>i).sort((a,b) => compareByCode(files[a].name, files[b].name));
+}
+function insertSorted(entry){
+  let pos = 0;
+  while(pos < files.length && compareByCode(files[pos].name, entry.name) <= 0) pos++;
+  files.splice(pos, 0, entry);
+  if(idx >= pos) idx++;
+  return pos;
+}
+function renderList(){
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  let visible = files.map((f,i)=>({f,i})).filter(o => o.f.name.toLowerCase().includes(searchQuery));
+  if(showFavoritesOnly) visible = visible.filter(o => isFavorite(o.f));
+  if(sortNewestFirst) visible = visible.slice().sort((a,b) => (b.f.addedAt||0) - (a.f.addedAt||0));
+  else visible = visible.slice().sort((a,b) => compareByCode(a.f.name, b.f.name));
+  if(visible.length === 0) {
+    list.innerHTML = `<div style="opacity:0.5;text-align:center">${showFavoritesOnly ? 'Belum ada lagu favorit' : 'Tidak ada lagu'}</div>`;
+    return;
+  }
+  visible.forEach(({f,i})=>{
+    const div = document.createElement('div');
+    const checked = selectedIndices.has(i);
+    const isNew = !f.builtin && f.addedAt && (Date.now() - f.addedAt < NEW_SONG_WINDOW_MS);
+    const newBadge = isNew ? '<span style="font-size:9px;font-weight:800;color:#22ff8c;border:1px solid rgba(34,255,140,.6);border-radius:6px;padding:1px 5px;margin-left:6px;flex-shrink:0">NEW</span>' : '';
+    div.className = 'item' + (i===idx?' active':'') + (selectMode && checked ? ' selected' : '');
+    if(selectMode){
+      div.innerHTML = `<span onclick="toggleSelect(${i})"><input type="checkbox" class="item-check" ${checked?'checked':''} onclick="event.stopPropagation();toggleSelect(${i})">${NOTE_ICON_SVG}${f.name}${newBadge}</span>`;
+    } else {
+      div.innerHTML = `<span onclick="selectSong(${i})">${NOTE_ICON_SVG}${f.name}${newBadge}</span> <button class="rename-btn" onclick="event.stopPropagation();renameSong(${i})">${RENAME_ICON_SVG}</button><button class="star-btn${isFavorite(f)?' active':''}" onclick="event.stopPropagation();toggleFavorite(${i})">${isFavorite(f)?STAR_ICON_SVG:STAR_ICON_OUTLINE_SVG}</button><button class="del-btn" onclick="event.stopPropagation();deleteSong(${i},this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>`;
+    }
+    list.appendChild(div);
+  })
+}
+
+async function renameSong(i){
+  const f = files[i]; if(!f) return;
+  const nn = prompt('Nama baru untuk "'+f.name+'":', f.name);
+  if(!nn || nn === f.name) return;
+  const oldKey = favKey(f);
+  f.name = nn;
+  if(f.builtin) f.origName = nn;
+  if(f.cloud && fbDb){
+    try{ await fbDb.collection(FB_COLLECTION).doc(f.cloudId).update({ name: nn }); }
+    catch(err){ console.error('Gagal update nama di database online:', err); }
+  }
+  if(favorites.has(oldKey)){
+    favorites.delete(oldKey);
+    favorites.add(favKey(f));
+    localStorage.setItem('ryzzFavorites', JSON.stringify([...favorites]));
+  }
+  await saveMidi();
+  renderList();
+  updateNowInfo();
+}
+
+function toggleSelect(i){
+  if(selectedIndices.has(i)) selectedIndices.delete(i); else selectedIndices.add(i);
+  renderList();
+  updateBulkDeleteUI();
+}
+
+function updateBulkDeleteUI(){
+  const row = document.getElementById('bulkDeleteRow');
+  const btn = document.getElementById('bulkDeleteBtn');
+  if(selectMode && selectedIndices.size > 0){
+    row.style.display = 'block';
+    btn.innerText = `Hapus Terpilih (${selectedIndices.size})`;
+  } else {
+    row.style.display = 'none';
+  }
+}
+
+document.getElementById('selectModeBtn').onclick = () => {
+  selectMode = false;
+  selectedIndices.clear();
+  const btn = document.getElementById('selectModeBtn');
+  btn.classList.remove('active');
+  btn.style.display = 'none';
+  renderList();
+  updateBulkDeleteUI();
+}
+
+document.getElementById('bulkDeleteBtn').onclick = () => {
+  if(selectedIndices.size === 0) return;
+  if(!confirm(`Hapus ${selectedIndices.size} lagu terpilih?`)) return;
+  const idxArr = Array.from(selectedIndices).sort((a,b)=>b-a);
+  if(idxArr.includes(idx)) stopSong();
+  const deletedBuiltins = new Set(JSON.parse(localStorage.getItem('ryzzBuiltinDeleted') || '[]'));
+  idxArr.forEach(i => {
+    const f = files[i];
+    if(f && f.builtin) deletedBuiltins.add(f.origName);
+    if(f && !f.builtin && f.localId) localDbDelete(f.localId);
+    files.splice(i,1);
+  });
+  localStorage.setItem('ryzzBuiltinDeleted', JSON.stringify([...deletedBuiltins]));
+  if(idx >= files.length) idx = files.length - 1;
+  if(idx < 0) idx = 0;
+  selectedIndices.clear();
+  selectMode = false;
+  const btn = document.getElementById('selectModeBtn');
+  btn.classList.remove('active');
+  btn.style.display = 'none';
+  saveMidi();
+  renderList();
+  updateNowInfo();
+  updateBulkDeleteUI();
+}
+
+function updateNowInfo(){
+  document.getElementById('nomorTotal').innerText = files.length? `${idx+1} / ${files.length}` : '0 / 0';
+  const current = files[idx];
+  const newTitle = current? current.name.replace(/\.(mid|midi|ryz|mp3|wav|ogg|oga|m4a|aac|flac|opus|webm)$/i,'') : 'Tidak ada lagu';
+  const inner = document.getElementById('nowTitleInner');
+  if(inner.innerText !== newTitle){
+    inner.innerText = newTitle;
+    resetTitleMarquee();
+  }
+  const dur = current? (current.type === 'audio' ? (current.duration || 0) : current.midi.duration) : 0;
+  document.getElementById('duration').innerText = current? formatTime(dur) : '00:00';
+}
+
+function selectSong(i){
+  if(playing || paused) stopSong();
+  idx=i;
+  currentTime = 0;
+  renderList();
+  updateNowInfo();
+}
+
+function deleteSong(i, btn){
+  const doRemove = () => {
+    if(i === idx) stopSong();
+    const removed = files[i];
+    if(removed && removed.builtin){
+      const deleted = new Set(JSON.parse(localStorage.getItem('ryzzBuiltinDeleted') || '[]'));
+      deleted.add(removed.origName);
+      localStorage.setItem('ryzzBuiltinDeleted', JSON.stringify([...deleted]));
+    }
+    if(removed && removed.cloud){
+      const hidden = new Set(JSON.parse(localStorage.getItem('ryzzCloudHidden') || '[]'));
+      hidden.add(removed.cloudId);
+      localStorage.setItem('ryzzCloudHidden', JSON.stringify([...hidden]));
+    }
+    if(removed && !removed.builtin && removed.localId){
+      localDbDelete(removed.localId);
+    }
+    files.splice(i,1);
+    if(idx >= files.length) idx = files.length - 1;
+    if(idx < 0) idx = 0;
+    currentTime = 0;
+    saveMidi();
+    renderList();
+    updateNowInfo();
+  };
+  const itemEl = btn ? btn.closest('.item') : null;
+  if(!itemEl){ doRemove(); return; }
+  const h = itemEl.offsetHeight;
+  itemEl.style.overflow = 'hidden';
+  itemEl.style.maxHeight = h + 'px';
+  itemEl.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1), opacity .28s ease, max-height .32s cubic-bezier(.4,0,.2,1) .06s, margin .32s cubic-bezier(.4,0,.2,1) .06s, padding .32s cubic-bezier(.4,0,.2,1) .06s';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      itemEl.style.transform = 'translateX(-36px) scale(0.92)';
+      itemEl.style.opacity = '0';
+      itemEl.style.maxHeight = '0px';
+      itemEl.style.marginBottom = '0px';
+      itemEl.style.paddingTop = '0px';
+      itemEl.style.paddingBottom = '0px';
+    });
+  });
+  setTimeout(doRemove, 340);
+}
+
+function changeSong(direction, forceAutoplay){
+  if(files.length === 0) return;
+  let newIdx;
+  if(shuffleOn && direction === 1 && files.length > 1){
+    do { newIdx = Math.floor(Math.random()*files.length); } while(newIdx === idx);
+  } else {
+    const order = defaultSortedIndices();
+    let pos = order.indexOf(idx);
+    if(pos === -1) pos = 0;
+    pos = (pos + direction + order.length) % order.length;
+    newIdx = order[pos];
+  }
+  const wasPlaying = playing;
+  stopSong();
+  idx = newIdx;
+  currentTime = 0;
+  renderList();
+  updateNowInfo();
+  if(forceAutoplay || wasPlaying){ doPlay(); }
+}
+
+document.getElementById('prevBtn').onclick = () => changeSong(-1, false);
+document.getElementById('nextBtn').onclick = () => changeSong(1, false);
+
+const PP_LONG_PRESS_MS = 3000;
+const playPauseBtn = document.getElementById('playPauseBtn');
+let ppTimer = null;
+let ppLongPressFired = false;
+function ppPressStart(e){
+  if(e.cancelable) e.preventDefault();
+  ppLongPressFired = false;
+  clearTimeout(ppTimer);
+  ppTimer = setTimeout(() => {
+    ppLongPressFired = true;
+    if(playing && !paused) doPause();
+  }, PP_LONG_PRESS_MS);
+}
+function ppPressEnd(){
+  clearTimeout(ppTimer);
+  if(ppLongPressFired){ ppLongPressFired = false; return; }
+  if(playing) stopSong();
+  else doPlay();
+}
+function ppPressCancel(){
+  clearTimeout(ppTimer);
+  ppLongPressFired = false;
+}
+playPauseBtn.addEventListener('pointerdown', ppPressStart);
+playPauseBtn.addEventListener('pointerup', ppPressEnd);
+playPauseBtn.addEventListener('pointerleave', ppPressCancel);
+playPauseBtn.addEventListener('pointercancel', ppPressCancel);
+playPauseBtn.addEventListener('contextmenu', e => e.preventDefault());
+
+async function doPlay(){
+  await Tone.start();
+  if(files.length===0) return alert('Tambah lagu dulu');
+  const current = files[idx];
+  let startAt = paused? currentTime : 0;
+  if(current.type === 'audio'){
+    playAudio(current, startAt);
+  } else {
+    play(current.midi, startAt);
+  }
+  playing = true; paused = false;
+  document.getElementById('status').innerText = 'PLAYING';
+  document.getElementById('statusBadge').classList.add('status-playing');
+  startTimer();
+}
+
+function doPause(){
+  if(playing && !paused){
+    const current = files[idx];
+    if(current && current.type === 'audio'){ audioPlayer.pause(); }
+    else { Tone.Transport.pause(); }
+    playing = false; paused = true;
+    document.getElementById('status').innerText = 'PAUSE';
+    document.getElementById('statusBadge').classList.remove('status-playing');
+    clearInterval(timerInterval);
+  }
+}
+
+function stopSong(){
+  const current = files[idx];
+  if(current && current.type === 'audio'){ audioPlayer.pause(); audioPlayer.currentTime = 0; }
+  else { Tone.Transport.stop(); }
+  playing = false; paused = false; currentTime = 0;
+  resetVisualizer();
+  document.getElementById('status').innerText = 'STOP';
+  document.getElementById('statusBadge').classList.remove('status-playing');
+  const seekBar = document.getElementById('seekBar');
+  seekBar.value = 0;
+  seekBar.style.setProperty('--pct', '0%');
+  clearInterval(timerInterval);
+  document.getElementById('time').innerText = '00:00';
+}
+
+function onSongEnded(){
+  if(!playing) return;
+  if(repeatMode === 'one'){
+    currentTime = 0;
+    doPlay();
+    return;
+  }
+  if(repeatMode === 'all' || shuffleOn){
+    changeSong(1, true);
+    return;
+  }
+  stopSong();
+}
+
+function playAudio(file, startAt = 0){
+  songDuration = file.duration || 0;
+  const dataUrl = `data:${file.mime};base64,${file.base64}`;
+  if(audioPlayer.dataset.name !== file.name){
+    audioPlayer.src = dataUrl;
+    audioPlayer.dataset.name = file.name;
+  }
+  audioPlayer.volume = dbToLinear(document.getElementById('volume').value);
+  audioPlayer.currentTime = startAt;
+  audioPlayer.play();
+}
+
+function play(midi, startAt = 0){
+  Tone.Transport.cancel();
+  songDuration = midi.duration;
+  computeVizRangeForMidi(midi);
+  resetVisualizer();
+
+  midi.tracks.forEach(track => {
+    track.notes.forEach(n=>{
+      if(n.time >= startAt){
+        Tone.Transport.schedule(time=>{
+          const newNote = transposeNote(n.name);
+          triggerNote(newNote, n.duration, time, n.velocity, n.midi);
+          Tone.Draw.schedule(() => { setBarActive(n.midi, true, n.velocity); }, time);
+          Tone.Draw.schedule(() => { setBarActive(n.midi, false); }, time + n.duration);
+        }, n.time - startAt);
+      }
+    });
+  });
+  Tone.Transport.scheduleOnce(() => { onSongEnded(); }, songDuration - startAt + 0.5);
+  Tone.Transport.start();
+}
+
+const seekBar = document.getElementById('seekBar');
+seekBar.oninput = () => {
+  isSeeking = true;
+  const frac = seekBar.value / 1000;
+  seekBar.style.setProperty('--pct', `${seekBar.value/10}%`);
+  document.getElementById('time').innerText = formatTime(frac * songDuration);
+};
+seekBar.onchange = () => {
+  const frac = seekBar.value / 1000;
+  const seekTime = frac * (songDuration || 0);
+  currentTime = seekTime;
+  const current = files[idx];
+  if(playing && current){
+    if(current.type === 'audio'){ audioPlayer.currentTime = seekTime; }
+    else { play(current.midi, seekTime); }
+    startTimer();
+  }
+  isSeeking = false;
+};
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    if(!playing) return;
+    const current = files[idx];
+    if(current && current.type === 'audio'){
+      currentTime = audioPlayer.currentTime;
+    } else {
+      currentTime += 0.05;
+    }
+    document.getElementById('time').innerText = formatTime(currentTime);
+    if(!isSeeking){
+      const pct = songDuration? Math.min(100, currentTime/songDuration*100) : 0;
+      seekBar.value = Math.round(pct*10);
+      seekBar.style.setProperty('--pct', `${pct}%`);
+    }
+    if(currentTime >= songDuration){ clearInterval(timerInterval); }
+  },50);
+}
+
+var introOverlay = document.getElementById('introOverlay');
+var introVideo = document.getElementById('introVideo');
+var introLogoScreen = document.getElementById('introLogoScreen');
+var introLogoImg = document.getElementById('introLogoImg');
+var appFrame = document.querySelector('.frame');
+var introDone = false;
+var introLogoShown = false;
+
+function introFinish(){
+  if(introDone) return;
+  introDone = true;
+  introOverlay.classList.add('introHide');
+  appFrame.classList.add('appIn');
+  setTimeout(function(){
+    if(introOverlay.parentNode){
+      introOverlay.parentNode.removeChild(introOverlay);
+    }
+  }, 950);
+}
+
+function introShowLogo(){
+  if(introLogoShown) return;
+  introLogoShown = true;
+  introVideo.style.display = 'none';
+  introLogoScreen.style.display = 'flex';
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      introLogoImg.classList.add('introShow');
+    });
+  });
+  setTimeout(function(){
+    introLogoImg.classList.remove('introShow');
+    introLogoImg.classList.add('introLeave');
+    introOverlay.classList.add('introHide');
+    appFrame.classList.add('appIn');
+    introFinish();
+  }, 3000);
+}
+
+introVideo.addEventListener('ended', introShowLogo);
+introVideo.addEventListener('error', introShowLogo);
+introLogoImg.addEventListener('error', introFinish);
+
+function tryPlayIntroVideo(){
+  const p = introVideo.play();
+  if(p && typeof p.catch === 'function'){
+    p.catch(introShowLogo);
+  }
+}
+tryPlayIntroVideo();
+</script>
+</body>
+</html>
